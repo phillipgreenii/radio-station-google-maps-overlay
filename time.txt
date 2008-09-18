@@ -1,6 +1,8 @@
 9/16
-read about google maps : 6:45-8:15 
-read about mapquest 11:00-11:15 
-demo 11:15- 2:30
+read about google maps : 6:45pm-8:15pm
+read about mapquest 11:00pm-11:15pm
+demo 11:15pm-2:30am
 9/17
-demo 7:00 -7:30
+demo 7:00am-7:30am
+set up git for code 9:30pm-10:00pm
+investigated python orm  10:00pm-10:15pm
