@@ -1,0 +1,11 @@
+Google Maps API
+http://code.google.com/apis/maps/
+
+Radio locator - has radio category information
+http://www.radio-locator.com/
+
+FCC radio listing page
+http://www.fcc.gov/mb/audio/fmq.html
+
+FCC radio database CDBS
+http://www.fcc.gov/mb/databases/cdbs/

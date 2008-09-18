@@ -1,0 +1,220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"  xmlns:v="urn:schemas-microsoft-com:vml">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>Google Maps JavaScript API Example: Advanced Directions</title>
+    <script src=" http://maps.google.com/?file=api&amp;v=2.x&amp;key=ABQIAAAAzr2EBOXUKnm_jVnk0OJI7xSosDVG8KKPE1-m51RBrvYughuyMxQ-i1QfUnH94QxWIa6N4U6MouMmBA"
+      type="text/javascript"></script>
+    <style type="text/css">
+      body {
+        font-family: Verdana, Arial, sans serif;
+        font-size: 11px;
+        margin: 2px;
+      }
+      table.directions th {
+	background-color:#EEEEEE;
+      }
+	  
+      img {
+        color: #000000;
+      }
+    </style>
+    <script type="text/javascript">
+ 
+    var map;
+    var gdir;
+    var geocoder = null;
+    var addressMarker;
+
+    function initialize() {
+      if (GBrowserIsCompatible()) {      
+        map = new GMap2(document.getElementById("map_canvas"));
+        gdir = new GDirections(map, document.getElementById("directions"));
+        GEvent.addListener(gdir, "load", onGDirectionsLoad);
+        GEvent.addListener(gdir, "error", handleErrors);
+
+        setDirections("morgantown,wv", "charleston,wv");
+      }
+    }
+    
+    function setDirections(fromAddress, toAddress) {
+      gdir.load("from: " + fromAddress + " to: " + toAddress)
+    }
+
+    function handleErrors(){
+	   if (gdir.getStatus().code == G_GEO_UNKNOWN_ADDRESS)
+	     alert("No corresponding geographic location could be found for one of the specified addresses. This may be due to the fact that the address is relatively new, or it may be incorrect.\nError code: " + gdir.getStatus().code);
+	   else if (gdir.getStatus().code == G_GEO_SERVER_ERROR)
+	     alert("A geocoding or directions request could not be successfully processed, yet the exact reason for the failure is not known.\n Error code: " + gdir.getStatus().code);
+	   
+	   else if (gdir.getStatus().code == G_GEO_MISSING_QUERY)
+	     alert("The HTTP q parameter was either missing or had no value. For geocoder requests, this means that an empty address was specified as input. For directions requests, this means that no query was specified in the input.\n Error code: " + gdir.getStatus().code);
+
+	//   else if (gdir.getStatus().code == G_UNAVAILABLE_ADDRESS)  <--- Doc bug... this is either not defined, or Doc is wrong
+	//     alert("The geocode for the given address or the route for the given directions query cannot be returned due to legal or contractual reasons.\n Error code: " + gdir.getStatus().code);
+	     
+	   else if (gdir.getStatus().code == G_GEO_BAD_KEY)
+	     alert("The given key is either invalid or does not match the domain for which it was given. \n Error code: " + gdir.getStatus().code);
+
+	   else if (gdir.getStatus().code == G_GEO_BAD_REQUEST)
+	     alert("A directions request could not be successfully parsed.\n Error code: " + gdir.getStatus().code);
+	    
+	   else alert("An unknown error occurred.");
+	   
+	}
+
+    function createMarker(point, name) {
+      var marker = new GMarker(point);
+      marker.name = name;
+      GEvent.addListener(marker, "click", function() {
+
+        map.openInfoWindowHtml(point, name);
+      });
+      return marker;
+    }
+
+	function onGDirectionsLoad(){ 
+      // Use this function to access information about the latest load()
+      // results.
+map.clearOverlays();
+      // e.g.
+      //document.getElementById("getStatus").innerHTML = gdir.getStatus().code;
+      if(gdir.getNumRoutes() >= 1) {
+         route = gdir.getRoute(0);
+         gpsPositions = new Array();
+         gpsPositions[gpsPositions.length] = route.getStep(0).getLatLng(); //FIXME: needs to be latLng of starting route
+
+         clump_size = 100000; //100km ~ 50m
+         increment_distance = 0;
+
+         for(i = 0; i < route.getNumSteps(); i++) {
+           step = route.getStep(i);
+           increment_distance += step.getDistance().meters;
+           if(increment_distance >= clump_size) {
+              gpsPositions[gpsPositions.length] = step.getLatLng();
+              increment_distance = 0;
+           }
+         }
+      }
+
+
+      document.getElementById("getStatus").innerHTML = gpsPositions;
+
+      for(i = 0; i < gpsPositions.length ; i++) {
+
+        url = 'http://www.fcc.gov/fcc-bin/fmq?serv=FM&vac=3&freq=0.0&fre2=107.9&list=4&dist=25'
+
+        //lat
+        gpslat = gpsPositions[i].lat();
+        dns = gpslat > 0 ? "N" : "S";
+        posgpslat = Math.abs(gpslat);
+        dlat = Math.floor(posgpslat);
+        mlat = Math.floor(posgpslat*60) % 60;
+        slat = Math.floor(posgpslat*3600) % 60;
+
+        url += '&dlat2=' + dlat
+             + '&mlat2=' + mlat
+             + '&slat2=' + slat
+             + '&NS='    + dns;
+
+        //lon
+        gpslon = gpsPositions[i].lng();
+        dew = gpslon > 0 ? "E" : "W";
+        posgpslon = Math.abs(gpslon);
+        dlon = Math.floor(posgpslon);
+        mlon = Math.floor(posgpslon*60) % 60;
+        slon = Math.floor(posgpslon*3600) % 60;
+
+        url += '&dlon2=' + dlon
+             + '&mlon2=' + mlon
+             + '&slon2=' + slon
+             + '&EW='    + dew;
+
+        FIELD_CALLSIGN = 0;
+        FIELD_FREQUENCY = 1;
+
+        FIELD_LAT_N_S = 18;
+        FIELD_LAT_DEG = 19;
+        FIELD_LAT_MIN = 20;
+        FIELD_LAT_SEC = 21;
+
+        FIELD_LON_E_W = 22;
+        FIELD_LON_DEG = 23;
+        FIELD_LON_MIN = 24;
+        FIELD_LON_SEC = 25;
+
+        GDownloadUrl(url, function(data, responseCode) {
+           var line_split_pattern = /\n+/;
+           lines = data.split(line_split_pattern);
+          for (var i = 0; i < lines.length; i++) {
+             var field_split_pattern = /\s*\|\s*/;
+             fields = lines[i].split(field_split_pattern);
+
+             name = fields[FIELD_CALLSIGN] + ":" + fields[FIELD_FREQUENCY];
+
+             //calc lat
+             lat = parseFloat(fields[FIELD_LAT_DEG]) + parseFloat(fields[FIELD_LAT_MIN]) / 60 +  parseFloat(fields[FIELD_LAT_SEC]) / 3600;
+             lat *= fields[FIELD_LAT_N_S] == "N" ? 1 : -1;
+
+             //calc lon
+             lon = parseFloat(fields[FIELD_LON_DEG]) + parseFloat(fields[FIELD_LON_MIN]) / 60 +  parseFloat(fields[FIELD_LON_SEC]) / 3600;
+             lon *= fields[FIELD_LON_E_W] == "E" ? 1 : -1;
+
+             document.getElementById("getStatus").innerHTML += name + ";" + lat + "," + lon + ";;";
+
+             var point = new GLatLng(lat,lon);
+
+             var marker = createMarker(point,name);
+             map.addOverlay(marker);
+          }
+
+        });
+
+      }
+
+
+	  // and yada yada yada...
+	}
+    </script>
+
+  </head>
+  <body onload="initialize()" onunload="GUnload()">
+  
+  <h2>Maps API Directions Illustrated</h2>
+  <form action="#" onsubmit="setDirections(this.from.value, this.to.value); return false">
+
+  <table>
+
+   <tr><th align="right">From:&nbsp;</th>
+
+   <td><input type="text" size="25" id="fromAddress" name="from"
+     value="morgantown,wv"/></td>
+   <th align="right">&nbsp;&nbsp;To:&nbsp;</th>
+   <td align="right"><input type="text" size="25" id="toAddress" name="to"
+     value="charleston,wv" /></td></tr>
+
+   <tr>
+   <td colspan="3">
+
+    <input name="submit" type="submit" value="Get Directions!" />
+   </td></tr>
+   </table>
+
+    
+  </form>
+
+    <br/>
+    <table class="directions">
+    <tr><th>Formatted Directions</th><th>Map</th></tr>
+
+    <tr>
+    <td valign="top"><div id="directions" style="width: 275px"></div></td>
+    <td valign="top"><div id="map_canvas" style="width: 800px; height: 600px"></div></td>
+
+    </tr>
+    </table>
+    <div id="getStatus"/>
+    <div id="debug"/>
+  </body>
+</html>
