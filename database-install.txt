@@ -1,0 +1,30 @@
+aptitude install mysql-server
+
+# start client
+mysql -u root
+
+create database cdbs;
+
+use cdbs;
+
+create tables
+create views
+
+#FIXME Has warnings:
+# -date columns are in the wrong format
+# -blanks aren't being processed correctly as numbers
+
+LOAD DATA INFILE '/home/phillip/projects/radio-map/facility.dat'
+REPLACE INTO TABLE facility
+COLUMNS TERMINATED BY '|'
+LINES TERMINATED BY '|\r\n';
+
+LOAD DATA INFILE '/home/phillip/projects/radio-map/application.dat'
+REPLACE INTO TABLE application
+COLUMNS TERMINATED BY '|'
+LINES TERMINATED BY '|\r\n';
+
+LOAD DATA INFILE '/home/phillip/projects/radio-map/fm_eng_data.dat'
+REPLACE INTO TABLE fm_eng_data
+COLUMNS TERMINATED BY '|'
+LINES TERMINATED BY '|\r\n';
